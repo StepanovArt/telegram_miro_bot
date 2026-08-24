@@ -1,21 +1,21 @@
 # Telegram → Miro Inbox Bot
 
-Личный бот для быстрого захвата мыслей и задач. Пишешь текст или наговариваешь голосовое — бот создаёт стикер в зоне высадки на доске Miro. Вечером расставляешь стикеры по календарю руками.
+A personal quick-capture bot. Send a text or voice message — the bot creates a sticky note in your Miro landing zone. In the evening, drag the stickers to their places on your calendar board manually.
 
-## Как работает
+## How It Works
 
-- **Текст** → стикер на доске
-- **Голосовое** → транскрипция через Gemini → стикер на доске
-- Стикеры появляются в зоне `x = -2000`, позиция по вертикали зависит от времени суток (утренние выше, вечерние ниже)
-- Чужие сообщения игнорируются (whitelist по user_id)
-- Rate limit: 60 сообщений в час
+- **Text** → sticky note on the board
+- **Voice** → transcribed via Gemini → sticky note on the board
+- Stickers land at `x = -2000`, vertical position depends on time of day (morning stickers higher, evening lower)
+- Messages from unknown users are silently ignored (user_id whitelist)
+- Rate limit: 60 messages per hour
 
-## Требования
+## Requirements
 
 - Python 3.11+
-- Токены: Telegram Bot, Miro, Gemini
+- Tokens: Telegram Bot, Miro, Gemini
 
-## Установка и запуск локально
+## Local Setup
 
 ```bash
 git clone https://github.com/StepanovArt/telegram_miro_bot.git
@@ -26,53 +26,63 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# заполни .env своими токенами
+# fill in your tokens
 
 python bot.py
 ```
 
-## Переменные окружения
+## Environment Variables
 
-| Переменная | Описание |
+| Variable | Description |
 |---|---|
-| `TG_TOKEN` | Токен бота от [@BotFather](https://t.me/BotFather) |
-| `MIRO_TOKEN` | OAuth-токен приложения Miro |
-| `MIRO_BOARD_ID` | ID доски из URL (`/board/<ID>/`) |
-| `GEMINI_API_KEY` | API-ключ Google Gemini |
-| `ALLOWED_USER_IDS` | Твой Telegram user_id (узнать: [@userinfobot](https://t.me/userinfobot)) |
+| `TG_TOKEN` | Bot token from [@BotFather](https://t.me/BotFather) |
+| `MIRO_TOKEN` | Miro app OAuth token |
+| `MIRO_BOARD_ID` | Board ID from the URL (`/board/<ID>/`) |
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `ALLOWED_USER_IDS` | Your Telegram user ID (get it from [@userinfobot](https://t.me/userinfobot)) |
 
-### Где взять токены
+### Where to Get the Tokens
 
-**TG_TOKEN** — создай бота через [@BotFather](https://t.me/BotFather), команда `/newbot`
+**TG_TOKEN** — create a bot via [@BotFather](https://t.me/BotFather), command `/newbot`
 
 **MIRO_TOKEN** — [miro.com/app/settings/user-profile/apps](https://miro.com/app/settings/user-profile/apps) → Create new app → Permissions: `boards:read` + `boards:write` → Install app and get OAuth token
 
-**MIRO_BOARD_ID** — из URL доски: `miro.com/app/board/**uXjVNxxxxxxx=**/`  
-Знак `=` в конце — часть ID, не обрезай
+**MIRO_BOARD_ID** — from the board URL: `miro.com/app/board/**uXjVNxxxxxxx=**/`
+The trailing `=` is part of the ID, don't cut it off
 
 **GEMINI_API_KEY** — [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 
-## Деплой на VPS (systemd)
+## Limits
+
+| Service | Limit |
+|---|---|
+| Bot (built-in) | 60 messages / hour |
+| Gemini free tier | 1 500 voice transcriptions / day, 15 / min |
+| Miro API | 300 requests / min |
+| Telegram | No real limits for personal bots |
+
+For personal daily capture, you'll never hit any of these.
+
+## Deploy to VPS (systemd)
 
 ```bash
-# Загрузи файлы на сервер
+# Upload files to the server
 scp -r . user@your-server:~/telegram_miro_bot/
 
-# На сервере
+# On the server
 cd ~/telegram_miro_bot
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env && nano .env   # заполни токены
+cp .env.example .env && nano .env   # fill in your tokens
 
-# Установи systemd unit
+# Install systemd unit
 sudo cp telegram-bot-miro.service /etc/systemd/system/
-# Отредактируй YOUR_USER в файле юнита
-sudo nano /etc/systemd/system/telegram-bot-miro.service
+sudo nano /etc/systemd/system/telegram-bot-miro.service  # replace YOUR_USER
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now telegram-bot-miro
 
-# Логи
+# Logs
 sudo journalctl -u telegram-bot-miro -f
 ```
