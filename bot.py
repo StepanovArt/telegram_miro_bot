@@ -104,7 +104,7 @@ def _transcribe(audio_path: str) -> str:
         audio_bytes = f.read()
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-3.6-flash",
         contents=[
             types.Part.from_bytes(data=audio_bytes, mime_type="audio/ogg"),
             (
@@ -146,7 +146,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 log.info("voice transcribed user=%s: %.80s", user.id, text)
             except Exception as e:
                 log.warning("transcription failed user=%s: %s", user.id, e)
-                text = f"🎤 транскрипция не удалась: {e}"
+                text = "🎤 голосовое, транскрипция не удалась"
             finally:
                 os.unlink(audio_path)
         else:
