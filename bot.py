@@ -122,14 +122,9 @@ def _transcribe(audio_path: str) -> str:
 
 async def _download_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     tg_file = await context.bot.get_file(update.message.voice.file_id)
-    audio_url = f"https://api.telegram.org/file/bot{TG_TOKEN}/{tg_file.file_path}"
-
-    resp = requests.get(audio_url, timeout=30)
-    resp.raise_for_status()
-
     tmp = tempfile.NamedTemporaryFile(suffix=".ogg", delete=False)
-    tmp.write(resp.content)
     tmp.close()
+    await tg_file.download_to_drive(tmp.name)
     return tmp.name
 
 # ---------------------------------------------------------------------------
