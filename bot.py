@@ -146,7 +146,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 log.info("voice transcribed user=%s: %.80s", user.id, text)
             except Exception as e:
                 log.warning("transcription failed user=%s: %s", user.id, e)
-                text = "🎤 голосовое, транскрипция не удалась"
+                text = f"🎤 транскрипция не удалась: {e}"
             finally:
                 os.unlink(audio_path)
         else:
