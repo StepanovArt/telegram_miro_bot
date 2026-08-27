@@ -152,27 +152,34 @@ def _notion_headers() -> dict:
     }
 
 
-def _append_blocks(children: list) -> None:
-    url = f"https://api.notion.com/v1/blocks/{NOTION_PAGE_ID}/children"
+def _append_to_block(block_id: str, children: list) -> dict:
+    url = f"https://api.notion.com/v1/blocks/{block_id}/children"
     resp = requests.patch(url, headers=_notion_headers(), json={"children": children}, timeout=10)
     if not resp.ok:
         raise RuntimeError(f"Notion вернул {resp.status_code}: {resp.text[:300]}")
+    return resp.json()
 
 
 def _append_diary_entry(text: str) -> None:
     state = _load_state()
     today = str(datetime.date.today())
 
+    # Если новый день — создаём сворачиваемый заголовок и запоминаем его id
     if state.get("last_heading_date") != today:
-        _append_blocks([{
+        result = _append_to_block(NOTION_PAGE_ID, [{
             "object": "block",
             "type": "heading_2",
-            "heading_2": {"rich_text": [{"type": "text", "text": {"content": _today_label()}}]},
+            "heading_2": {
+                "rich_text": [{"type": "text", "text": {"content": _today_label()}}],
+                "is_toggleable": True,
+            },
         }])
         state["last_heading_date"] = today
+        state["heading_block_id"] = result["results"][0]["id"]
         _save_state(state)
 
-    _append_blocks([{
+    # Записи добавляем внутрь тоггла, а не на страницу
+    _append_to_block(state["heading_block_id"], [{
         "object": "block",
         "type": "paragraph",
         "paragraph": {"rich_text": [{"type": "text", "text": {"content": text}}]},
