@@ -40,7 +40,10 @@ MIRO_TOKEN     = _require("MIRO_TOKEN")
 MIRO_BOARD_ID  = _require("MIRO_BOARD_ID")
 GEMINI_API_KEY = _require("GEMINI_API_KEY")
 NOTION_TOKEN   = _require("NOTION_TOKEN")
-NOTION_PAGE_ID = _require("NOTION_PAGE_ID")
+_raw_page_id   = _require("NOTION_PAGE_ID").replace("-", "")
+if len(_raw_page_id) != 32:
+    raise SystemExit(f"[FATAL] NOTION_PAGE_ID должен быть 32 символа, получено {len(_raw_page_id)}")
+NOTION_PAGE_ID = f"{_raw_page_id[:8]}-{_raw_page_id[8:12]}-{_raw_page_id[12:16]}-{_raw_page_id[16:20]}-{_raw_page_id[20:]}"
 
 _raw_ids = os.environ.get("ALLOWED_USER_IDS", "").strip()
 if not _raw_ids:
