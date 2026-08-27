@@ -72,14 +72,16 @@ def _create_sticky(text: str) -> None:
     url = f"https://api.miro.com/v2/boards/{board}/sticky_notes"
 
     now = datetime.datetime.now()
-    y = (now.hour * 3600 + now.minute * 60 + now.second) / 10
+    seconds_today = now.hour * 3600 + now.minute * 60 + now.second
+    y = seconds_today / 30  # весь день ≈ 0–2880, вечер ~2200–2600
+    x = -2000 + (now.second - 30) * 5  # ±150 от центра на основе секунды
 
     resp = requests.post(
         url,
         json={
             "data":     {"content": text, "shape": "square"},
             "style":    {"fillColor": "light_yellow"},
-            "position": {"x": -2000, "y": y},
+            "position": {"x": x, "y": y},
         },
         headers={
             "Authorization": f"Bearer {MIRO_TOKEN}",
